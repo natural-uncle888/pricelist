@@ -1,0 +1,540 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+  <!--
+    meta viewport：使用裝置寬度、初始縮放 1，讓行動裝置排版正確
+  -->
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <title>自然大叔｜家電清洗服務價目表</title>
+
+  <link rel="icon" type="image/png" href="https://res.cloudinary.com/dijzndzw2/image/upload/v1757173258/logo-3_jznrtv.png" />
+
+
+
+  <style>
+    /* =========================================================
+       1) CSS 變數（亮色主題預設）
+       - 集中管理顏色、陰影、高度等，可於 :root 與 body.dark 覆蓋切換
+       ========================================================= */
+    :root{
+      --bg-color:#f8f9fa;          /* 頁面背景（亮色） */
+      --text-color:#222;            /* 主要文字顏色（亮色） */
+      --header-bg:#2d6a4f;          /* 品牌綠：頁首背景、行動訊息條背景 */
+      --card-bg:#ffffff;            /* 區塊卡片背景（亮色） */
+      --price-color:#d00000;        /* 價格色（警示紅） */
+      --btn-line:#06c755;           /* LINE 按鈕綠 */
+      --btn-call:#1e90ff;           /* 立即來電藍 */
+      --bar-bg:rgba(255,255,255,.95);   /* 行動底部列背景（半透明白） */
+      --bar-shadow:0 -6px 24px rgba(0,0,0,.08); /* 行動底部列陰影（向上） */
+      --divider:rgba(0,0,0,.08);    /* 卡片邊框／細分線（亮色） */
+
+      /* 章節標題與左側色條（亮色主題使用的綠色們） */
+      --section-title:#2d6a4f;      /* 標題文字色（深綠） */
+      --section-border:#40916c;     /* 標題左側色條（亮綠） */
+
+      /* --cta-h 由 JS 寫入「行動底部 CTA 的實際高度（含安全區）」供 body / FAB 使用 */
+      --cta-h:0px;
+    }
+
+    /* =========================================================
+       2) 深色主題覆蓋
+       - 切換 body.dark 後，以下變數會覆蓋 :root 中對應值
+       - 章節標題改成更亮的薄荷綠，提升深色可讀性
+       ========================================================= */
+    body.dark{
+      --bg-color:#121212;           /* 深色背景 */
+      --text-color:#f1f1f1;         /* 深色主要文字（高對比） */
+      --header-bg:#1b4332;          /* 深綠（header） */
+      --card-bg:#1e1e1e;            /* 卡片背景（深色） */
+      --price-color:#ff6b6b;        /* 價格色（深色環境較亮的紅） */
+      --btn-line:#06c755;           /* LINE 綠同色 */
+      --btn-call:#4a90e2;           /* 呼叫藍稍亮，深色更清楚 */
+      --bar-bg:rgba(18,18,18,.95);  /* 行動底部列深色背景（帶透明） */
+      --bar-shadow:0 -6px 24px rgba(0,0,0,.35); /* 深色陰影更重一點 */
+      --divider:rgba(255,255,255,.12);          /* 深色卡片邊框 */
+
+      /* 深色：章節標題與左側色條改成亮薄荷綠系，提高對比 */
+      --section-title:#95d5b2;      /* 標題文字（亮薄荷綠） */
+      --section-border:#52b788;     /* 標題左條（薄荷綠） */
+    }
+
+    /* =========================================================
+       3) 全域排版與可存取性
+       - 設定字體、背景、基本交互過渡
+       ========================================================= */
+    html,body{height:100%}
+    body{
+      font-family:'Microsoft JhengHei',system-ui,-apple-system,Segoe UI,Roboto,'Noto Sans TC',sans-serif;
+      background:var(--bg-color);
+      color:var(--text-color);
+      margin:0;
+      line-height:1.8;              /* 行高提升可讀性 */
+      transition:background .3s,color .3s; /* 深淺切換時過渡 */
+    }
+    :focus-visible{
+      /* 鍵盤使用者可見焦點框（A11y） */
+      outline:3px solid #7cc;
+      outline-offset:2px;
+    }
+
+    /* =========================================================
+       4) 頁首（Header）
+       ========================================================= */
+    header{
+      background:var(--header-bg);
+      color:#fff;
+      text-align:center;
+      padding:20px 10px;            /* 上下 20px，左右 10px 的內距 */
+    }
+    h1{ margin:0; font-size:1.6rem; }
+
+    /* 主內容容器（限制寬度、置中） */
+    main{
+      max-width:900px;
+      margin:20px auto;
+      padding:0 16px 20px;          /* 左右 16px 內距，底部 20px 緩衝 */
+    }
+
+    /* =========================================================
+       5) 可拖曳主題切換鍵（浮動 FAB）
+       - 固定在視窗、可拖曳，放手靠邊吸附
+       - bottom 使用 --cta-h 確保不與行動 CTA 重疊
+       ========================================================= */
+    .theme-fab{
+      position:fixed;
+      z-index:1000;                 /* 在 CTA（999）之上，確保可點到 */
+      right:16px;                   /* 初始停靠右側 */
+      bottom:calc(var(--cta-h, 0px) + 12px); /* FAB 與底部 CTA 留 12px 間距 */
+      background:#444; color:#fff;
+      border:none;
+      padding:12px 14px;
+      border-radius:999px;          /* 圓形膠囊 */
+      font-size:14px; font-weight:600;
+      cursor:grab; user-select:none; touch-action:none; /* 支援拖曳，避免選字 */
+      box-shadow:0 10px 24px rgba(0,0,0,.18);
+      transition:left .2s ease, top .2s ease; /* 放手吸附動畫 */
+    }
+    .theme-fab:active{ cursor:grabbing; }
+
+    /* =========================================================
+       6) 區塊卡片（每一大區：冷氣清洗／水管清洗…）
+       ========================================================= */
+    .section-card{
+      background:var(--card-bg);
+      border:1px solid var(--divider);
+      border-radius:14px;
+      padding:18px;
+      box-shadow:0 2px 10px rgba(0,0,0,.06);
+      margin-top:20px;
+    }
+    .section-card>h2{
+      /* 標題文字用 --section-title；左側條用 --section-border */
+      margin:0 0 12px;
+      color:var(--section-title);
+      border-left:5px solid var(--section-border);
+      padding-left:10px;
+    }
+
+    /* =========================================================
+       7) 內部清單卡片（每一項服務）
+       - 使用 grid 讓寬螢幕可二欄、手機單欄
+       ========================================================= */
+    ul{ list-style:none; padding:0; margin:0; }
+    .list-cards{ display:grid; gap:12px; grid-template-columns:1fr; }
+    @media (min-width:720px){
+      .list-cards{ grid-template-columns:repeat(2,1fr); }
+    }
+    .list-cards>li{
+      background:var(--card-bg);
+      border:1px solid var(--divider);
+      border-radius:10px;
+      padding:12px 14px;
+      box-shadow:0 1px 4px rgba(0,0,0,.06);
+    }
+    .title{ font-weight:800; letter-spacing:.3px; } /* 服務名稱更醒目 */
+    .meta{ font-size:13px; opacity:.85; }          /* 補充說明淡一點 */
+    .price{ color:var(--price-color); font-weight:800; } /* 價格高亮 */
+    .price-line{
+      /* 一行左右對齊：左側標籤、右側價格 */
+      display:flex; justify-content:space-between; gap:12px;
+      margin-top:6px; align-items:baseline;
+    }
+    .price-line .label{ flex:1; }                   /* 標籤撐開空間 */
+    .price-line .price{ min-width:6em; text-align:right; }
+    .badge{
+      display:inline-block; font-size:12px; font-weight:700;
+      padding:2px 8px; border-radius:999px; margin-left:8px;
+      background:#ffe8cc; color:#b85c00;            /* 暖色小徽章 */
+    }
+
+    /* 頁尾（會自動被 body 的 padding-bottom 撐出可見區） */
+    footer{
+      text-align:center; padding:20px 16px; font-size:.9rem; color:#aaa;
+    }
+
+    /* =========================================================
+       8) 按鈕樣式（桌機／行動共用）
+       ========================================================= */
+    .btn{
+      display:inline-block;
+      padding:10px 20px;
+      margin:10px 5px;
+      border-radius:10px;
+      text-decoration:none;
+      color:#fff;
+      font-weight:700;
+      box-shadow:0 4px 12px rgba(0,0,0,.12);
+    }
+    .btn:active{ transform:translateY(1px); } /* 壓下微動態 */
+    .btn-line{ background:var(--btn-line); }
+    .btn-call{ background:var(--btn-call); }
+    .cta-desktop{ text-align:center; margin-top:12px; } /* 桌機顯示在模塊內 */
+
+    /* =========================================================
+       9) 手機底部固定 CTA
+       - 內含「品牌色促銷訊息條 + 兩顆按鈕」
+       - 背景半透明＋毛玻璃（backdrop-filter）
+       - 實際高度交給 JS 量測，避免白塊過高／過低
+       ========================================================= */
+    .mobile-cta{
+      position:fixed; left:0; right:0; bottom:0;
+      background:var(--bar-bg);
+      backdrop-filter:blur(8px);               /* 毛玻璃效果（支援瀏覽器會套用） */
+      box-shadow:var(--bar-shadow);
+      padding:8px 10px calc(8px + env(safe-area-inset-bottom));
+      box-sizing:border-box;
+      display:none;                            /* 桌機不顯示，行動在 media query 內顯示 */
+      z-index:999;                             /* 低於 FAB（1000），高於內容 */
+      border-top:1px solid var(--divider);
+    }
+    .mobile-cta .wrap{
+      max-width:900px; margin:0 auto;
+      display:grid; gap:8px;
+      grid-template-columns:1fr 1fr;           /* 第二列兩顆按鈕 */
+      grid-template-rows:auto auto;            /* 第一列訊息、第二列按鈕 */
+      align-items:center;
+    }
+    .mobile-cta .msg{
+      grid-column:1 / -1;                      /* 佔滿兩欄 */
+      text-align:center; font-weight:900; font-size:14px; line-height:1.3;
+      color:#fff; background:var(--header-bg); /* 品牌綠底、白字 */
+      border-radius:12px; padding:10px 12px;
+      box-shadow:0 4px 12px rgba(0,0,0,.10);
+      display:flex; align-items:center; justify-content:center; gap:8px;
+      letter-spacing:.3px;
+    }
+    .mobile-cta .msg .icon{
+      font-size:16px;                          /* ⭐ 圖示大小 */
+      filter:drop-shadow(0 1px 2px rgba(0,0,0,.25)); /* 微陰影更立體 */
+    }
+    .mobile-cta .btn{
+      width:100%; margin:0; text-align:center;
+      border-radius:12px; font-size:15px;
+      padding:12px 14px;
+    }
+
+    /* =========================================================
+       10) 行動版開關（<= 600px）
+       - 顯示固定 CTA
+       - 以「--cta-h 實測高度」為 body 預留底部空間，footer 不會被遮
+       ========================================================= */
+    @media (max-width:600px){
+      h1{ font-size:1.2rem; }       /* 行動標題縮小一點 */
+      main{ padding:0 12px 16px; }  /* 行動側邊間距略縮 */
+      .cta-desktop{ display:none; } /* 行動不顯示桌機版 CTA 區塊 */
+      .mobile-cta{ display:block; } /* 顯示底部固定 CTA */
+      body{
+        padding-bottom: var(--cta-h); /* 由 JS 寫入的實際高度，預留空間 */
+      }
+    }
+    @media (max-width:400px){
+      .mobile-cta .btn{ font-size:14.5px; } /* 超小螢幕字級再小些 */
+    }
+  </style>
+</head>
+<body>
+  <header><h1>📌 自然大叔｜家電清洗服務價目表</h1></header>
+
+  <!--
+    浮動可拖曳主題鍵（FAB）
+    - aria-label：可存取名稱
+    - 文字會在 JS 依主題切換「🌙 深色 / ☀️ 淺色」
+  -->
+  <button id="theme-fab" class="theme-fab" aria-label="切換深/淺色主題">🌙 深色</button>
+
+  <main>
+    <!-- ========== 區塊：冷氣清洗 ========== -->
+    <section class="section-card" aria-labelledby="ac">
+      <h2 id="ac">💨 冷氣清洗</h2>
+      <ul class="list-cards">
+        <li>
+          <div class="title">分離式冷氣</div>
+          <div class="price-line"><div class="label">每台</div><div class="price">$1,800</div></div>
+        </li>
+        <li>
+          <div class="title">分離式冷氣（團購/多台）<span class="badge">熱門</span></div>
+          <div class="price-line"><div class="label">三台以上／每台</div><div class="price">$1,500</div></div>
+        </li>
+        <li>
+          <div class="title">吊隱式冷氣</div>
+          <div class="price-line"><div class="label">每台</div><div class="price">$2,800</div></div>
+        </li>
+        <li>
+          <div class="title">加價條款</div>
+          <div class="meta">
+            <ul>
+              <li>📏 室內機長度 &gt; 182 cm：每台加收 <span class="price">$300</span>（加長費）</li>
+              <li>🧩 變形金剛系列：每台加收 <span class="price">$500</span>（國際牌 CU/CS-PX.GX.QX.LX 系列、三菱變形金剛、富士通變形系列）</li>
+              <li>🧺 富士通一體式水盤：每台加收 <span class="price">$500</span></li>
+            </ul>
+          </div>
+        </li>
+      </ul>
+    </section>
+
+    <!-- ========== 區塊：水管清洗 ========== -->
+    <section class="section-card" aria-labelledby="pipe">
+      <h2 id="pipe">🚿 水管清洗</h2>
+      <ul class="list-cards">
+        <li>
+          <div class="title">自來水管清洗保養</div>
+          <div class="meta">標準住宅適用</div>
+        </li>
+        <li>
+          <div class="title">無廚一衛</div>
+          <div class="price-line"><div class="label">套內基礎方案</div><div class="price">$3,200</div></div>
+        </li>
+        <li>
+          <div class="title">一廚一衛</div>
+          <div class="price-line"><div class="label">標準方案</div><div class="price">$4,200</div></div>
+          <div class="meta" style="margin-top:6px;">
+            每增加一廚或一衛 <span class="price">+$500</span>、每多一迴路 <span class="price">+$1,000</span>、五樓以上每層 <span class="price">+$1,000</span>
+          </div>
+        </li>
+      </ul>
+    </section>
+
+    <!-- ========== 區塊：其他服務 ========== -->
+    <section class="section-card" aria-labelledby="others">
+      <h2 id="others">🌀 其他服務</h2>
+      <ul class="list-cards">
+        <li>
+          <div class="title">直立式洗衣機清洗</div>
+          <div class="price-line"><div class="label">每台</div><div class="price">$2,000</div></div>
+          <div class="meta" style="margin-top:6px;">若有清洗冷氣，再優惠 <span class="price">$200</span></div>
+        </li>
+        <li>
+          <div class="title">家用水塔清洗</div>
+          <div class="price-line"><div class="label">每一顆</div><div class="price">$1,000</div></div>
+          <div class="meta" style="margin-top:6px;">若同時清洗自來水管，再優惠 <span class="price">$200</span></div>
+        </li>
+      </ul>
+    </section>
+
+    <!-- ========== 區塊：選配項目 ========== -->
+    <section class="section-card" aria-labelledby="addons">
+      <h2 id="addons">✳️ 選配項目</h2>
+      <ul class="list-cards">
+        <li>
+          <div class="title">冷氣防黴處理</div>
+          <div class="price-line"><div class="label">每台</div><div class="price">$300</div></div>
+          <div class="meta" style="margin-top:6px;">滿五台優惠 <span class="price">$250／台</span>；奈米級抗菌、日本納豆菌淨化、無香料水性原料</div>
+        </li>
+        <li>
+          <div class="title">臭氧全面消毒（密閉空間）</div>
+          <div class="price-line"><div class="label">每間房</div><div class="price">$200</div></div>
+          <div class="meta" style="margin-top:6px;">除臭、氧化污染物、抑菌防霉、空氣淨化</div>
+        </li>
+      </ul>
+    </section>
+
+    <!-- 桌機版 CTA（置於內容區中段；行動版會隱藏） -->
+    <div class="cta-desktop" aria-label="聯絡行動">
+      <div class="meta" style="opacity:.85; margin-bottom:6px;">馬上預約，三台以上現省 $900</div>
+      <a href="https://lin.ee/OHk6Rn7" class="btn btn-line">📱 LINE 預約</a>
+      <a href="tel:0912356331" class="btn btn-call">📞 立即來電</a>
+    </div>
+  </main>
+
+  <!--
+    行動版底部固定 CTA（會一直跟著視線）
+    - 第一列：品牌綠訊息條（內有 ⭐ 圖示）
+    - 第二列：兩顆主動作按鈕
+  -->
+  <div class="mobile-cta" role="region" aria-label="快速聯絡">
+    <div class="wrap">
+      <div class="msg"><span class="icon">⭐</span> 馬上預約，三台以上現省 $900</div>
+      <a href="https://lin.ee/OHk6Rn7" class="btn btn-line">📱 LINE 預約</a>
+      <a href="tel:0912356331" class="btn btn-call">📞 立即來電</a>
+    </div>
+  </div>
+
+  <footer>© 2025 自然大叔｜專業家電清洗服務</footer>
+
+  <script>
+    /* =========================================================
+       A) 主題切換（深／淺）
+       - 儲存使用者選擇在 localStorage('theme')
+       - 預設依系統偏好 prefers-color-scheme
+       - FAB 文字同步顯示 "🌙 深色" / "☀️ 淺色"
+       ========================================================= */
+    const themeFab = document.getElementById('theme-fab');
+
+    function applyThemeFromStorage(){
+      const saved = localStorage.getItem('theme');                // 讀取使用者上次選擇
+      const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches; // 系統偏好
+      const isDark = saved ? saved === 'dark' : prefersDark;      // 若無使用者設定，採系統
+      document.body.classList.toggle('dark', isDark);             // 切換 body.dark
+      themeFab.textContent = isDark ? '☀️ 淺色' : '🌙 深色';     // 更新 FAB 顯示文字
+    }
+
+    function toggleTheme(){
+      const nowDark = !document.body.classList.contains('dark');  // 反轉目前狀態
+      document.body.classList.toggle('dark', nowDark);
+      localStorage.setItem('theme', nowDark ? 'dark' : 'light');  // 存入使用者偏好
+      themeFab.textContent = nowDark ? '☀️ 淺色' : '🌙 深色';
+    }
+
+    // 點擊 FAB 切換主題（拖曳中會略過點擊）
+    themeFab.addEventListener('click', (e)=>{
+      if(themeFab._dragging) return; // 若為拖曳結束瞬間，避免誤觸
+      toggleTheme();
+    });
+
+    // 初次套用主題
+    applyThemeFromStorage();
+
+    /* =========================================================
+       B) 量測行動底部 CTA 的「實際高度」→ 寫入 --cta-h
+       - 讓 body 使用 padding-bottom: var(--cta-h) 預留剛好空間
+       - 同時 FAB 使用 bottom: calc(var(--cta-h) + 12px) 避讓
+       - 對 iOS 安全區（env(safe-area-inset-bottom)）無需重複加總
+       ========================================================= */
+    function measureCta(){
+      const mq = window.matchMedia('(max-width: 600px)');         // 僅在行動版時量測
+      const cta = document.querySelector('.mobile-cta');
+      const visible = !!cta && mq.matches && getComputedStyle(cta).display !== 'none';
+      const h = visible ? Math.ceil(cta.getBoundingClientRect().height) : 0; // 含安全區
+      const safe = Math.max(56, Math.min(h, 220)); // 合理範圍保護（最低 56px，最高 220px）
+      document.documentElement.style.setProperty('--cta-h', safe + 'px');    // 寫入 CSS 變數
+    }
+
+    // 於 DOM 準備、圖片／字體載入完成、尺寸變化時重算
+    window.addEventListener('DOMContentLoaded', measureCta);
+    window.addEventListener('load', measureCta);
+    window.addEventListener('resize', measureCta);
+    window.addEventListener('orientationchange', measureCta);
+
+    // 若瀏覽器支援 ResizeObserver，監看 .mobile-cta 尺寸改變（字體換行等）
+    const ctaEl = document.querySelector('.mobile-cta');
+    if (window.ResizeObserver && ctaEl) new ResizeObserver(measureCta).observe(ctaEl);
+
+    /* =========================================================
+       C) 可拖曳 FAB（主題鍵）
+       - 支援滑鼠與觸控（Pointer Events）
+       - 拖曳過程：即時更新 left / top
+       - 鬆手：自動吸附最近邊（左／右）
+       - 位置記憶：localStorage('themeFabPos')
+       - 會避開底部 CTA 區域（使用 --cta-h）
+       ========================================================= */
+    (function makeDraggableFab(btn){
+      let startX=0, startY=0, startLeft=0, startTop=0, dragging=false;
+
+      // 初次讀取記憶位置（若有）
+      const saved = localStorage.getItem('themeFabPos');
+      if(saved){
+        try{
+          const {left, top}=JSON.parse(saved);
+          setPos(left, top);
+        }catch(e){}
+      }
+
+      // 工具：設定位置（改寫 left/top，並解除 right/bottom，避免互斥）
+      function setPos(l,t){
+        btn.style.left = l + 'px';
+        btn.style.top  = t + 'px';
+        btn.style.right = 'auto';
+        btn.style.bottom = 'auto';
+      }
+
+      // 工具：限制數值在區間內（避免超出畫面）
+      function clamp(v,min,max){ return Math.max(min, Math.min(max, v)); }
+
+      // 工具：讀取 --cta-h 數值（FAB 需避開 CTA）
+      function ctaH(){
+        return parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--cta-h')) || 0;
+      }
+
+      // Pointer 按下：開始拖曳
+      function onDown(e){
+        if(e.pointerType==='mouse' && e.button!==0) return; // 僅左鍵或觸控
+        e.preventDefault();
+        dragging=false;            // 初始非拖曳中
+        btn._dragging=false;       // 提供 click handler 辨識
+        btn.style.transition='none'; // 拖曳時移除吸附動畫，避免延遲
+        const r = btn.getBoundingClientRect();
+        startX=e.clientX; startY=e.clientY;
+        startLeft=r.left; startTop=r.top;
+        addEventListener('pointermove', onMove);
+        addEventListener('pointerup', onUp);
+      }
+
+      // Pointer 移動：計算位移，更新 FAB 位置
+      function onMove(e){
+        const dx=e.clientX-startX, dy=e.clientY-startY;
+
+        // 若移動超過閾值，視為拖曳中（避免 click 觸發）
+        if(!dragging && (Math.abs(dx)>3 || Math.abs(dy)>3)){
+          dragging=true; btn._dragging=true;
+        }
+        if(!dragging) return;
+
+        const vw=innerWidth, vh=innerHeight, m=8, guard=ctaH()+8; // 8px 緩衝
+        const r = btn.getBoundingClientRect();
+
+        // 限制 FAB 不要超出畫面，且底部要避開 CTA
+        const nl = clamp(startLeft+dx, m, vw - r.width - m);
+        const nt = clamp(startTop +dy, m, vh - r.height - guard);
+        setPos(nl, nt);
+      }
+
+      // Pointer 放開：結束拖曳並執行「靠邊吸附」
+      function onUp(){
+        removeEventListener('pointermove', onMove);
+        removeEventListener('pointerup', onUp);
+
+        // 恢復吸附動畫
+        btn.style.transition='left .2s ease, top .2s ease';
+
+        // 取得目前 FAB 位置與螢幕寬度，判斷靠左還是靠右
+        const r = btn.getBoundingClientRect(), vw = innerWidth, m = 8;
+        const left = (r.left + r.width/2 < vw/2) ? m : (vw - r.width - m);
+        setPos(left, r.top);
+
+        // 記憶位置（下次載入還原）
+        localStorage.setItem('themeFabPos', JSON.stringify({left, top:r.top}));
+
+        // 略微延遲後移除拖曳中旗標，避免誤觸點擊
+        if(dragging){ setTimeout(()=>{ btn._dragging=false; },0); }
+      }
+
+      // 視窗尺寸改變：校正 FAB 仍處於可視範圍內，並避開 CTA
+      addEventListener('resize', ()=>{
+        const r=btn.getBoundingClientRect(), vw=innerWidth, vh=innerHeight, m=8, g=ctaH()+8;
+        const l=clamp(r.left, m, vw - r.width - m);
+        const t=clamp(r.top,  m, vh - r.height - g);
+        setPos(l, t);
+        localStorage.setItem('themeFabPos', JSON.stringify({left:l, top:t}));
+      });
+
+      // 綁定 Pointer 事件
+      btn.addEventListener('pointerdown', onDown);
+
+      // 首次載入之後，保險校正一次（避免初始位置卡到 CTA）
+      setTimeout(measureCta, 0);  // 先量 CTA 再校正
+    })(themeFab);
+  </script>
+</body>
+</html>
